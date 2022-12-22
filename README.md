@@ -1,15 +1,21 @@
-# Charting Library — How to Implement Datafeed
+1. Clone the repo
 
-## What is Charting Library
+    ```bash
+    git clone https://github.com/birdeye-so/tradingview-example-js-api.git
+    ```
 
-Charting Library is a standalone solution for displaying charts. This free, downloadable library is hosted on your servers and is connected to your data feed to be used in your website or app. [Learn more and download][website-url].
+2. Go to the repo folder and init git submodule with the charting library: 
 
-## What is this tutorial about
+    ```bash
+    git submodule update --init --recursive
+    ```
 
-[The tutorial][tutorial-url] explains step by step how to connect your data to the Charting Library. It uses free [CryptoCompare][cryptocompare-url] API.
+3. Run the following command to serve static files:
 
-In the first part of [the tutorial][tutorial-url] you will know how to connect the search of symbols and the display of historical data using ordinary HTTP requests, and then in the second part you will learn how to connect the realtime data via WebSocket.
+    ```bash
+    npx serve
+    ```
 
-[website-url]: https://www.tradingview.com/HTML5-stock-forex-bitcoin-charting-library/
-[tutorial-url]: documentation/home.md
-[cryptocompare-url]: https://www.cryptocompare.com/
+Reference:
+
+https://github.com/tradingview/charting-library-tutorial
