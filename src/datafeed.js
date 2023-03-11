@@ -58,7 +58,7 @@ export default {
       session: '24x7',
       timezone: 'Etc/UTC',
       minmov: 1,
-      pricescale: 100,
+      pricescale: 10 ** 16,
       has_intraday: true,
       has_no_volume: true,
       has_weekly_and_monthly: false,
