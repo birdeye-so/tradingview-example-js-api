@@ -4,7 +4,7 @@
 
 The Charting Library is used to display financial data, but it doesn't contain any data itself. Whatever you have, a web API, a database or a CSV file, you can display your data in the Charting Library.
 
-In this example, we'll use a web API integration of [CryptoCompare][cryptocompare-website-url] (also [CryptoCompare API][cryptocompare-api-url]).
+In this example, we'll use a web API integration of [Birdeye][birdeye-website-url] (also [Birdeye API][birdeye-api-url]).
 
 ## How the datafeed works
 
@@ -22,33 +22,20 @@ We'll use the following configuration for our datafeed sample:
 
 ```javascript
 const configurationData = {
-    supported_resolutions: ['1D', '1W', '1M'],
-    exchanges: [
-        {
-            value: 'Bitfinex',
-            name: 'Bitfinex',
-            desc: 'Bitfinex',
-        },
-        {
-            // `exchange` argument for the `searchSymbols` method, if a user selects this exchange
-            value: 'Kraken',
-
-            // filter name
-            name: 'Kraken',
-
-            // full exchange name displayed in the filter popup
-            desc: 'Kraken bitcoin exchange',
-        },
-    ],
-    symbols_types: [
-        {
-            name: 'crypto',
-
-            // `symbolType` argument for the `searchSymbols` method, if a user selects this symbol type
-            value: 'crypto',
-        },
-        // ...
-    ],
+  supported_resolutions: [
+    '1',
+    '3',
+    '5',
+    '15',
+    '30',
+    '60',
+    '120',
+    '240',
+    '1D',
+    '1W',
+  ],
+  intraday_multipliers: ['1', '3', '5', '15', '30', '60', '120', '240'],
+  exchanges: [],
 };
 ```
 
@@ -59,14 +46,14 @@ Note, that the callback must be called asynchronously.
 
 ```javascript
 const configurationData = {
-    // ...
+  // ...
 };
 
 export default {
-    onReady: (callback) => {
-        console.log('[onReady]: Method call');
-        setTimeout(() => callback(configurationData));
-    },
+  onReady: (callback) => {
+    console.log('[onReady]: Method call');
+    setTimeout(() => callback(configurationData));
+  },
 };
 ```
 
@@ -76,60 +63,37 @@ export default {
 
 This method is used by the library to retrieve information about a specific symbol (exchange, price scale, full symbol etc.).
 
-Let's add some shared functions in [`helpers.js`][helpers-file-url] that we'll need to implement in `resolveSymbol`.
-
-These functions are specific to CryptoCompare and you most likely won't need most of them for implementing your own datafeed.
+These functions are specific to Birdeye and you most likely won't need most of them for implementing your own datafeed.
 
 [helpers.js][helpers-file-url]:
 
 ```javascript
-// Make requests to CryptoCompare API
+// Make requests to Birdeye API
 export async function makeApiRequest(path) {
-    try {
-        const response = await fetch(`https://min-api.cryptocompare.com/${path}`);
-        return response.json();
-    } catch(error) {
-        throw new Error(`CryptoCompare request error: ${error.status}`);
-    }
-}
-
-// Generate a symbol ID from a pair of the coins
-export function generateSymbol(exchange, fromSymbol, toSymbol) {
-    const short = `${fromSymbol}/${toSymbol}`;
-    return {
-        short,
-        full: `${exchange}:${short}`,
-    };
+  try {
+    const response = await fetch(`https://public-api.birdeye.so/${path}`, {
+      headers: {
+        'X-API-KEY': BE_API_KEY,
+      },
+    });
+    return response.json();
+  } catch (error) {
+    throw new Error(`Birdeye request error: ${error.status}`);
+  }
 }
 ```
 
-In [datafeed.js][datafeed-file-url] we are going to add a helper function that is used to load all symbols for all supported exchanges (see [CryptoCompare API][load-all-cryptocompare-api-url]):
+In [datafeed.js][datafeed-file-url] we are going to add a helper function that is used to load all symbols for all supported exchanges (see [Birdeye API][load-all-birdeye-api-url]):
 
 ```javascript
 import { makeApiRequest, generateSymbol } from './helpers.js';
 // ...
 async function getAllSymbols() {
-    const data = await makeApiRequest('data/v3/all/exchanges');
-    let allSymbols = [];
+  const data = await makeApiRequest(
+    'public/tokenlist?sort_by=v24hUSD&sort_type=desc&offset=0&limit=-1'
+  );
 
-    for (const exchange of configurationData.exchanges) {
-        const pairs = data.Data[exchange.value].pairs;
-
-        for (const leftPairPart of Object.keys(pairs)) {
-            const symbols = pairs[leftPairPart].map(rightPairPart => {
-                const symbol = generateSymbol(exchange.value, leftPairPart, rightPairPart);
-                return {
-                    symbol: symbol.short,
-                    full_name: symbol.full,
-                    description: symbol.short,
-                    exchange: exchange.value,
-                    type: 'crypto',
-                };
-            });
-            allSymbols = [...allSymbols, ...symbols];
-        }
-    }
-    return allSymbols;
+  return data.data.tokens;
 }
 ```
 
@@ -139,43 +103,46 @@ Please note, that the library can build weekly and monthly resolutions from 1D i
 
 ```javascript
 export default {
-    // ...
-    resolveSymbol: async (
-        symbolName,
-        onSymbolResolvedCallback,
-        onResolveErrorCallback,
-        extension
-    ) => {
-        console.log('[resolveSymbol]: Method call', symbolName);
-        const symbols = await getAllSymbols();
-        const symbolItem = symbols.find(({ full_name }) => full_name === symbolName);
-        if (!symbolItem) {
-            console.log('[resolveSymbol]: Cannot resolve symbol', symbolName);
-            onResolveErrorCallback('cannot resolve symbol');
-            return;
-        }
-        const symbolInfo = {
-            ticker: symbolItem.full_name,
-            name: symbolItem.symbol,
-            description: symbolItem.description,
-            type: symbolItem.type,
-            session: '24x7',
-            timezone: 'Etc/UTC',
-            exchange: symbolItem.exchange,
-            minmov: 1,
-            pricescale: 100,
-            has_intraday: false,
-            has_no_volume: true,
-            has_weekly_and_monthly: false,
-            supported_resolutions: configurationData.supported_resolutions,
-            volume_precision: 2,
-            data_status: 'streaming',
-        };
+  // ...
+  resolveSymbol: async (
+    symbolAddress,
+    onSymbolResolvedCallback,
+    onResolveErrorCallback,
+    extension
+  ) => {
+    console.log('[resolveSymbol]: Method call', symbolAddress);
+    const symbols = await getAllSymbols();
+    const symbolItem = symbols.find((item) => item.address === symbolAddress);
 
-        console.log('[resolveSymbol]: Symbol resolved', symbolName);
-        onSymbolResolvedCallback(symbolInfo);
-    },
-// ...
+    if (!symbolItem) {
+      console.log('[resolveSymbol]: Cannot resolve symbol', symbolAddress);
+      onResolveErrorCallback('cannot resolve symbol');
+      return;
+    }
+
+    const symbolInfo = {
+      address: symbolItem.address,
+      ticker: symbolItem.address,
+      name: symbolItem.symbol,
+      description: symbolItem.symbol + '/USD',
+      type: symbolItem.type,
+      session: '24x7',
+      timezone: 'Etc/UTC',
+      minmov: 1,
+      pricescale: 10 ** 16,
+      has_intraday: true,
+      has_no_volume: true,
+      has_weekly_and_monthly: false,
+      supported_resolutions: configurationData.supported_resolutions,
+      intraday_multipliers: configurationData.intraday_multipliers,
+      volume_precision: 2,
+      data_status: 'streaming',
+    };
+
+    console.log('[resolveSymbol]: Symbol resolved', symbolAddress);
+    onSymbolResolvedCallback(symbolInfo);
+  },
+  // ...
 };
 ```
 
@@ -185,99 +152,98 @@ export default {
 
 This method is used by the Charting Library to get historical data for the symbol.
 
-Add `parseFullSymbol` function to [helpers.js][helpers-file-url] and do not forget to import it in `datafeed.js`. It parses a crypto pair symbol (`full` value returned from `generateSymbol`) and returns all parts of this symbol:
+Add `parseResolution` function to [helpers.js][helpers-file-url] and do not forget to import it in `datafeed.js`. It parses TradingView's resolutions to Birdeye's resolutions:
 
 ```javascript
 // ...
-export function parseFullSymbol(fullSymbol) {
-    const match = fullSymbol.match(/^(\w+):(\w+)\/(\w+)$/);
-    if (!match) {
-        return null;
-    }
+const RESOLUTION_MAPPING = {
+  1: '1m',
+  3: '3m',
+  5: '5m',
+  15: '15m',
+  30: '30m',
+  60: '1H',
+  120: '2H',
+  240: '4H',
+  '1D': '1D',
+  '1W': '1W',
+};
 
-    return { exchange: match[1], fromSymbol: match[2], toSymbol: match[3] };
+export function parseResolution(resolution) {
+  if (!resolution || !RESOLUTION_MAPPING[resolution])
+    return RESOLUTION_MAPPING[0];
+
+  return RESOLUTION_MAPPING[resolution];
 }
 ```
 
-Use [Cryptocompare API][get-history-cryptocompare-api-url] and the newly created function `parseFullSymbol` in `getBars` method in [datafeed.js][datafeed-file-url].
+Use [Birdeye API][get-history-birdeye-api-url] and the newly created function `parseResolution` in `getBars` method in [datafeed.js][datafeed-file-url].
 
 The API doesn't allow you to specify a `from` date, so you have to filter bars on the client-side:
 
 ```javascript
-import { makeApiRequest, parseFullSymbol, generateSymbol } from './helpers.js';
+import { makeApiRequest, parseResolution } from './helpers.js';
 // ...
 export default {
-    // ...
-    getBars: async (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) => {
-        const { from, to, firstDataRequest } = periodParams;
-        console.log('[getBars]: Method call', symbolInfo, resolution, from, to);
-        const parsedSymbol = parseFullSymbol(symbolInfo.full_name);
-        const urlParameters = {
-            e: parsedSymbol.exchange,
-            fsym: parsedSymbol.fromSymbol,
-            tsym: parsedSymbol.toSymbol,
-            toTs: to,
-            limit: 2000,
-        };
-        const query = Object.keys(urlParameters)
-            .map(name => `${name}=${encodeURIComponent(urlParameters[name])}`)
-                .join('&');
-        try {
-            const data = await makeApiRequest(`data/histoday?${query}`);
-            if (data.Response && data.Response === 'Error' || data.Data.length === 0) {
-                // "noData" should be set if there is no data in the requested period.
-                onHistoryCallback([], { noData: true });
-                return;
-            }
-            let bars = [];
-            data.Data.forEach(bar => {
-                if (bar.time >= from && bar.time < to) {
-                    bars = [...bars, {
-                        time: bar.time * 1000,
-                        low: bar.low,
-                        high: bar.high,
-                        open: bar.open,
-                        close: bar.close,
-                    }];
-                }
-            });
-            console.log(`[getBars]: returned ${bars.length} bar(s)`);
-            onHistoryCallback(bars, { noData: false });
-        } catch (error) {
-            console.log('[getBars]: Get error', error);
-            onErrorCallback(error);
+  // ...
+  getBars: async (
+    symbolInfo,
+    resolution,
+    periodParams,
+    onHistoryCallback,
+    onErrorCallback
+  ) => {
+    const { from, to, firstDataRequest } = periodParams;
+    console.log('[getBars]: Method call', symbolInfo, resolution, from, to);
+    const urlParameters = {
+      address: symbolInfo.address,
+      type: parseResolution(resolution),
+      time_from: from,
+      time_to: to,
+    };
+    const query = Object.keys(urlParameters)
+      .map((name) => `${name}=${encodeURIComponent(urlParameters[name])}`)
+      .join('&');
+    try {
+      const data = await makeApiRequest(`defi/ohlcv?${query}`);
+      if (!data.success || data.data.items.length === 0) {
+        // "noData" should be set if there is no data in the requested period.
+        onHistoryCallback([], {
+          noData: true,
+        });
+        return;
+      }
+      let bars = [];
+      data.data.items.forEach((bar) => {
+        if (bar.unixTime >= from && bar.unixTime < to) {
+          bars = [
+            ...bars,
+            {
+              time: bar.unixTime * 1000,
+              low: bar.l,
+              high: bar.h,
+              open: bar.o,
+              close: bar.c,
+            },
+          ];
         }
-    },
-//...
+      });
+      if (firstDataRequest) {
+        lastBarsCache.set(symbolInfo.address, {
+          ...bars[bars.length - 1],
+        });
+      }
+      console.log(`[getBars]: returned ${bars.length} bar(s)`);
+      onHistoryCallback(bars, {
+        noData: false,
+      });
+    } catch (error) {
+      console.log('[getBars]: Get error', error);
+      onErrorCallback(error);
+    }
+  },
+  //...
 };
-```
-
-## searchSymbols
-
-[Link to the doc][search-symbols-docs-url].
-
-This method is used by the Charting Library to search symbols every time a user types a text in the symbol search box. Changing symbols also works using the symbol search.
-
-We will request all available symbols from the API and then filter them in [datafeed.js][datafeed-file-url]. If a user has not selected an exchange, the `exchange` argument will then be equal to an empty string:
-
-```javascript
-searchSymbols: async (
-    userInput,
-    exchange,
-    symbolType,
-    onResultReadyCallback
-) => {
-    console.log('[searchSymbols]: Method call');
-    const symbols = await getAllSymbols();
-    const newSymbols = symbols.filter(symbol => {
-        const isExchangeValid = exchange === '' || symbol.exchange === exchange;
-        const isFullSymbolContainsInput = symbol.full_name
-            .toLowerCase()
-            .indexOf(userInput.toLowerCase()) !== -1;
-        return isExchangeValid && isFullSymbolContainsInput;
-    });
-    onResultReadyCallback(newSymbols);
-},
 ```
 
 At this point if you save all your changes and refresh your page, you should see a chart plotted and should now be able to search symbols and display historical data.
@@ -285,15 +251,13 @@ At this point if you save all your changes and refresh your page, you should see
 Let's [implement the streaming](streaming-implementation.md).
 Also you can return to [Home Page](home.md).
 
-[cryptocompare-website-url]: https://www.cryptocompare.com/
-[cryptocompare-api-url]: https://min-api.cryptocompare.com/
-[load-all-cryptocompare-api-url]: https://min-api.cryptocompare.com/documentation?key=Other&cat=allExchangesV3Endpoint
-[get-history-cryptocompare-api-url]: https://min-api.cryptocompare.com/documentation?key=Historical&cat=dataHistoday
-
+[birdeye-website-url]: https://birdeye.so/
+[birdeye-api-url]: https://public-api.birdeye.so/
+[load-all-birdeye-api-url]: https://public-api.birdeye.so/#/Public/get_public_tokenlist
+[get-history-birdeye-api-url]: https://public-api.birdeye.so/#/Private%20(requires%20API%20key)/get_defi_ohlcv_pair
 [onready-docs-url]: https://github.com/tradingview/charting_library/wiki/JS-Api#onreadycallback
 [resolve-symbol-docs-url]: https://github.com/tradingview/charting_library/wiki/JS-Api#resolvesymbolsymbolname-onsymbolresolvedcallback-onresolveerrorcallback
 [get-bars-docs-url]: https://github.com/tradingview/charting_library/wiki/JS-Api#getbarssymbolinfo-resolution-from-to-onhistorycallback-onerrorcallback-firstdatarequest
 [search-symbols-docs-url]: https://github.com/tradingview/charting_library/wiki/JS-Api#searchsymbolsuserinput-exchange-symboltype-onresultreadycallback
-
 [datafeed-file-url]: ../src/datafeed.js
 [helpers-file-url]: ../src/helpers.js

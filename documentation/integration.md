@@ -10,16 +10,16 @@ In the example we are using ES6, which might be not supported by some older brow
 
 1. First, create a folder for your project:
 
-    ```bash
-    mkdir chart
-    cd chart
-    ```
+   ```bash
+   mkdir chart
+   cd chart
+   ```
 
 1. Clone [TradingView Charting Library][library-url]. For access instructions, see [Getting Started](getting-started.md).
 
-    ```bash
-    git clone https://github.com/tradingview/charting_library charting_library_cloned_data
-    ```
+   ```bash
+   git clone https://github.com/tradingview/charting_library charting_library_cloned_data
+   ```
 
 ## Adding a container
 
@@ -28,23 +28,24 @@ You need to have some DOM container that will be used to display of the chart.
 Create an initial HTML file [index.html](../index.html) in your project folder (aka chart) and add the following code:
 
 ```html
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>TradingView Charting Library example</title>
-        <script
-            type="text/javascript"
-            src="charting_library_cloned_data/charting_library/charting_library.js">
-        </script>
+  <head>
+    <title>TradingView Charting Library example</title>
+    <script
+      type="text/javascript"
+      src="charting_library_cloned_data/charting_library/charting_library.js"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bignumber.js@9.1.0/bignumber.min.js"></script>
 
-        <!-- Custom datafeed module. -->
-        <script type="module" src="src/main.js"></script>
-    </head>
-    <body style="margin:0px;">
-        <div id="tv_chart_container">
-            <!-- This div will contain the Charting Library widget. -->
-        </div>
-    </body>
+    <!-- Custom datafeed module. -->
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body style="margin:0px;">
+    <div id="tv_chart_container">
+      <!-- This div will contain the Charting Library widget. -->
+    </div>
+  </body>
 </html>
 ```
 
@@ -59,12 +60,28 @@ Add a folder `src`, then create [main.js](../src/main.js) in it and add code dep
 import Datafeed from './datafeed.js';
 
 window.tvWidget = new TradingView.widget({
-    symbol: 'Bitfinex:BTC/USD', // default symbol
-    interval: '1D', // default interval
-    fullscreen: true, // displays the chart in the fullscreen mode
-    container: 'tv_chart_container',
-    datafeed: Datafeed,
-    library_path: '../charting_library_cloned_data/charting_library/',
+  symbol: 'So11111111111111111111111111111111111111112', // default symbol
+  interval: '1', // default interval
+  fullscreen: true, // displays the chart in the fullscreen mode
+  container: 'tv_chart_container',
+  datafeed: Datafeed,
+  library_path: '../charting_library_cloned_data/charting_library/',
+  disabled_features: [
+    'popup_hints',
+    'header_symbol_search',
+    'symbol_search_hot_key',
+    'header_compare',
+  ],
+  custom_formatters: {
+    priceFormatterFactory: () => {
+      return {
+        format: (price) => {
+          // return the appropriate format
+          return formatPrice(price);
+        },
+      };
+    },
+  },
 });
 ```
 
@@ -76,24 +93,47 @@ In the next part of the tutorial we'll implement all of these methods, but for n
 
 ```javascript
 export default {
-    onReady: (callback) => {
-        console.log('[onReady]: Method call');
-    },
-    searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-        console.log('[searchSymbols]: Method call');
-    },
-    resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) => {
-        console.log('[resolveSymbol]: Method call', symbolName);
-    },
-    getBars: (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) => {
-        console.log('[getBars]: Method call', symbolInfo);
-    },
-    subscribeBars: (symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) => {
-        console.log('[subscribeBars]: Method call with subscriberUID:', subscriberUID);
-    },
-    unsubscribeBars: (subscriberUID) => {
-        console.log('[unsubscribeBars]: Method call with subscriberUID:', subscriberUID);
-    },
+  onReady: (callback) => {
+    console.log('[onReady]: Method call');
+  },
+  searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
+    console.log('[searchSymbols]: Method call');
+  },
+  resolveSymbol: (
+    symbolName,
+    onSymbolResolvedCallback,
+    onResolveErrorCallback,
+    extension
+  ) => {
+    console.log('[resolveSymbol]: Method call', symbolName);
+  },
+  getBars: (
+    symbolInfo,
+    resolution,
+    periodParams,
+    onHistoryCallback,
+    onErrorCallback
+  ) => {
+    console.log('[getBars]: Method call', symbolInfo);
+  },
+  subscribeBars: (
+    symbolInfo,
+    resolution,
+    onRealtimeCallback,
+    subscriberUID,
+    onResetCacheNeededCallback
+  ) => {
+    console.log(
+      '[subscribeBars]: Method call with subscriberUID:',
+      subscriberUID
+    );
+  },
+  unsubscribeBars: (subscriberUID) => {
+    console.log(
+      '[unsubscribeBars]: Method call with subscriberUID:',
+      subscriberUID
+    );
+  },
 };
 ```
 

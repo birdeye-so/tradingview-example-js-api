@@ -1,9 +1,9 @@
 export const BE_API_KEY = 'your_api_key';
 
-// Make requests to CryptoCompare API
+// Make requests to Birdeye API
 export async function makeApiRequest(path) {
-	try {
-		const response = await fetch(
+  try {
+    const response = await fetch(
       `https://public-api.birdeye.so/${path}`,
       {
         headers: {
@@ -11,10 +11,10 @@ export async function makeApiRequest(path) {
         }
       }
     );
-		return response.json();
-	} catch (error) {
-		throw new Error(`CryptoCompare request error: ${error.status}`);
-	}
+    return response.json();
+  } catch (error) {
+    throw new Error(`Birdeye request error: ${error.status}`);
+  }
 }
 
 const RESOLUTION_MAPPING = {
