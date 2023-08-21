@@ -44,7 +44,6 @@ client.on('connect', async function (connection) {
         }
     });
 
-    //subscribe ohlcv pair
     msg = {
         type: "SUBSCRIBE_PRICE",
         data: {
