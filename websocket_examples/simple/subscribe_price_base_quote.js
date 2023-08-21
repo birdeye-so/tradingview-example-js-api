@@ -27,18 +27,18 @@ client.on('connect', async function (connection) {
 
             //example
             // {
-            //     "type": "PRICE_DATA",
+            //     "type": "BASE_QUOTE_PRICE_DATA",
             //     "data": {
-            //       "o": 20.71224215173429,
-            //       "h": 20.813397091796027,
-            //       "l": 20.688902997542982,
-            //       "c": 20.813397091796027,
+            //       "o": 20.712300146174698,
+            //       "h": 20.81357129642205,
+            //       "l": 20.686498192128145,
+            //       "c": 20.767514381003995,
             //       "eventType": "ohlcv",
             //       "type": "15m",
             //       "unixTime": 1692633600,
-            //       "v": 4631.7664447870075,
-            //       "symbol": "SOL",
-            //       "address": "So11111111111111111111111111111111111111112"
+            //       "v": 0,
+            //       "baseAddress": "So11111111111111111111111111111111111111112",
+            //       "quoteAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
             //     }
             // }
         }
@@ -46,11 +46,11 @@ client.on('connect', async function (connection) {
 
     //subscribe ohlcv pair
     msg = {
-        type: "SUBSCRIBE_PRICE",
+        type: "SUBSCRIBE_BASE_QUOTE_PRICE",
         data: {
             chartType: "15m",
-            currency: "usd",
-            address: "So11111111111111111111111111111111111111112"
+            baseAddress: "So11111111111111111111111111111111111111112",
+            quoteAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         }
     }
 

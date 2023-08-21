@@ -29,16 +29,16 @@ client.on('connect', async function (connection) {
             // {
             //     "type": "PRICE_DATA",
             //     "data": {
-            //       "o": 20.71224215173429,
-            //       "h": 20.813397091796027,
-            //       "l": 20.688902997542982,
-            //       "c": 20.813397091796027,
+            //       "o": 0.00023282633722989724,
+            //       "h": 0.0002328322272468132,
+            //       "l": 0.00023165913298840073,
+            //       "c": 0.0002316642553576273,
             //       "eventType": "ohlcv",
             //       "type": "15m",
             //       "unixTime": 1692633600,
-            //       "v": 4631.7664447870075,
-            //       "symbol": "SOL",
-            //       "address": "So11111111111111111111111111111111111111112"
+            //       "v": 2317.616010000001,
+            //       "symbol": "SLOW-mSOL",
+            //       "address": "FmKAfMMnxRMaqG1c4emgA4AhaThi4LQ4m2A12hwoTibb"
             //     }
             // }
         }
@@ -49,8 +49,8 @@ client.on('connect', async function (connection) {
         type: "SUBSCRIBE_PRICE",
         data: {
             chartType: "15m",
-            currency: "usd",
-            address: "So11111111111111111111111111111111111111112"
+            currency: "pair",
+            address: "FmKAfMMnxRMaqG1c4emgA4AhaThi4LQ4m2A12hwoTibb"
         }
     }
 
